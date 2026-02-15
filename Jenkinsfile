@@ -1,23 +1,27 @@
 pipeline {
     agent any
     stages {
-        stage('Clone') {
+        stage('Clone Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/Shreya-Verma2000/nginx-jenkins.git'
             }
         }
-        stage('Build Docker Image') {
+
+        stage('Set Minikube Docker') {
             steps {
-                script {
-                    docker.build("my-nginx:1.0")
-                }
+                powershell 'minikube -p minikube docker-env --shell powershell | Invoke-Expression'
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                powershell 'cd $env:WORKSPACE; docker build -t my-nginx:1.0 .'
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh 'kubectl apply -f k8s/nginx-deployment.yaml'
-                }
+                powershell 'cd $env:WORKSPACE; kubectl apply -f k8s/nginx-deployment.yaml'
             }
         }
     }
